@@ -12,11 +12,14 @@ import random
 def init(data):
     data.animals = []
     data.foods = []
+    data.counter = 0
     
-    for i in range(30):
-        data.animals.append( Species(data.width, data.height) )
+    for i in range(20):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        data.animals.append( Species(xPos, yPos) )
         
-    for i in range(10):
+    for i in range(30):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         data.foods.append( Food(xPos, yPos) )
@@ -29,9 +32,16 @@ def redrawAll(canvas, data):
     for animal in data.animals: animal.draw(canvas)
 
 def mousePressed(event, data): 
-    data.foods.append( Food(event.x, event.y) )
+    data.animals.append( Species(event.x, event.y) )
 
 def timerFired(data): 
+    data.counter += 1
+    
+    if ( data.counter %3 == 0):    
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        data.foods.append( Food(xPos, yPos) )
+        
     # Animal : Move, EatFood, energy reduction
     aIndex = 0
     newAnimals = []
@@ -42,6 +52,10 @@ def timerFired(data):
         
         # Animals age
         data.animals[aIndex].age += 1
+        if ( data.animals[aIndex].age > 100 ): 
+            child = data.animals[aIndex].reproduce()
+            if ( child != None) : 
+                data.animals.append(child)
         
         # Loop through existing foods and eat 
         fIndex = 0
@@ -55,7 +69,7 @@ def timerFired(data):
         # Energy is reduced
         # remove animals without energy -> spawn food on dead places
         data.animals[aIndex].energy -= 1
-        if (data.animals[aIndex].energy > 0) : 
+        if (data.animals[aIndex].energy >= 0 and data.animals[aIndex].age < 200 ) : 
             newAnimals.append(data.animals[aIndex])
         else  :
             data.foods.append( Food(data.animals[aIndex].xPos, data.animals[aIndex].yPos))
@@ -110,4 +124,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(500, 500)
+run(1000, 800)

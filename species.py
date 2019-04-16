@@ -1,15 +1,16 @@
 import random 
 from food import *
 from dna import * 
+import copy
 
 class Species(object):
     
-    def __init__(self, width, height):
+    def __init__(self, xPos, yPos):
         
         self.DNA = DNA()
-        self.genes = self.DNA.genes
-        self.xPos = random.randint(0, width)
-        self.yPos = random.randint(0, height)
+        
+        self.xPos = xPos
+        self.yPos = yPos
         self.dX = random.choice([-1, 1])
         self.dY = random.choice([-1, 1])
         
@@ -19,7 +20,6 @@ class Species(object):
         self.size = random.randint(5, 20)
         self.speed = random.randint(100//self.size, 150//self.size)
         
-
         self.energy = 125
         self.age = 0
         
@@ -53,17 +53,27 @@ class Species(object):
     def draw(self, canvas):
         color = "#FF%sFF"% (decimalToHexColor( 255 - self.energy))
         canvas.create_oval(self.xPos-self.size, self.yPos-self.size, self.xPos+self.size, self.yPos+self.size,fill =color, width=0)
-        canvas.create_text(self.xPos, self.yPos, text = str(self.energy))
+        canvas.create_text(self.xPos, self.yPos, text = str(self.age))
         
     
-    def reproduce(self, other):
-        pass
+    def reproduce(self):
+        if ( random.random() < 0.01) : 
+            child = Species(self.xPos, self.yPos)
+            child.DNA = DNA()
+            child.DNA.genes = copy.deepcopy(self.DNA.genes)
+            child.DNA.mutate(random.random())
+            child.size = self.size
+            child.speed = self.speed 
+            return child
+        else : 
+            return None
         
     
-#Takes decimal number <= 255
+# Takes decimal number <= 255
 # Returns Hex color
 def decimalToHexColor(decimal):
     result = ""
+    if (decimal >= 255) : decimal = 255
     while ( decimal > 0 ):
         digit = decimal%16
         if ( digit>= 10): 
