@@ -15,10 +15,10 @@ class DNA(object):
             else               : child.genes[i] = other.genes[i];
         return child
             
-    
     def mutate(self, mutationRate):
         for i in range( len(self.genes) ): 
             if (random.random() < mutationRate):
                 self.genes[i] = random.randint(65, 123)
+            
             
                 
