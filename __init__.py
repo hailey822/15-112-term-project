@@ -6,35 +6,64 @@
 
 from tkinter import *
 from species import *
+from speciesA import *
+from speciesB import *
 from food import *
+import numpy 
 import random
 
 def init(data):
     data.animals = []
+    data.A = set()
+    data.B = set()
     data.foods = []
     data.counter = 0
+    data.trap = []
+    data.currentPoints = []
     
+    
+    for i in range(30):
+            xPos = random.randint(0, data.width)
+            yPos = random.randint(0, data.height)
+            data.foods.append( Food(xPos, yPos) )
+
     for i in range(20):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
-        data.animals.append( Species(xPos, yPos) )
-        
-    for i in range(30):
+        organism = A(xPos, yPos, 0)
+        data.A.add(organism)
+        data.animals.append( organism)
+    
+    for i in range(100):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
-        data.foods.append( Food(xPos, yPos) )
+        organism = B(xPos, yPos, 0)
+        data.B.add(organism)
+        data.animals.append( organism)
+
 
 def keyPressed(event, data):
-    pass
+    if ( event.keysym == "Return"):
+        data.trap.append(data.currentPoints)
+        data.currentPoints = []
 
 def redrawAll(canvas, data):
+    if len(data.trap)!=0:
+        for trap in data.trap :     
+            canvas.create_polygon(trap, fill="yellow", outline="black")
+    if len(data.currentPoints)!=0:
+        canvas.create_polygon(data.currentPoints, fill="yellow", outline="black")
     for food  in data.foods: food.draw(canvas)
-    for animal in data.animals: animal.draw(canvas)
+    for animal in data.animals: 
+        animal.draw(canvas)
+        
 
 def mousePressed(event, data): 
-    data.animals.append( Species(event.x, event.y) )
+    data.currentPoints.append((event.x,event.y))
 
 def timerFired(data): 
+    groupBehavior(data, data.A)
+    groupBehavior(data, data.B)
     data.counter += 1
     
     if ( data.counter %3 == 0):    
@@ -44,6 +73,7 @@ def timerFired(data):
         
     # Animal : Move, EatFood, energy reduction
     aIndex = 0
+    
     newAnimals = []
     while ( aIndex < len(data.animals) ):
         
@@ -52,10 +82,13 @@ def timerFired(data):
         
         # Animals age
         data.animals[aIndex].age += 1
+        # Reproduce after certain age
         if ( data.animals[aIndex].age > 100 ): 
             child = data.animals[aIndex].reproduce()
             if ( child != None) : 
                 data.animals.append(child)
+                if ( child.className() == "A"): data.A.add(child)
+                if ( child.className() == "B"): data.B.add(child)
         
         # Loop through existing foods and eat 
         fIndex = 0
@@ -72,13 +105,36 @@ def timerFired(data):
         if (data.animals[aIndex].energy >= 0 and data.animals[aIndex].age < 200 ) : 
             newAnimals.append(data.animals[aIndex])
         else  :
-            data.foods.append( Food(data.animals[aIndex].xPos, data.animals[aIndex].yPos))
+            death(data, aIndex)
+            data.foods.append( Food(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1]))
+            
+        
+        for i in range(aIndex+1, len(data.animals) ):
+            if ( data.animals[aIndex].eatPrey(data.animals[i]) ) : 
+                death(data, i)
+                data.animals.pop(i)
+                break
+  
             
         aIndex += 1
     
     data.animals = newAnimals
+
+def death(data, index):
+    target = data.animals[index]
+    if ( target.className() == "A"): 
+        data.A.remove(target)
+    if ( target.className() == "B"): 
+        data.B.remove(target)
         
-        
+def groupBehavior(data, group):
+    for animal in group : 
+        #animal.seek(data.target)
+        animal.cohere(group)
+        animal.align(group)
+        animal.separate(group)
+        animal.move(data.width, data.height)
+        animal.acc = numpy.array([0, 0])
 
 def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
@@ -101,12 +157,13 @@ def run(width=300, height=300):
         redrawAllWrapper(canvas, data)
         # pause, then call timerFired again
         canvas.after(data.timerDelay, timerFiredWrapper, canvas, data)
+    
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
     data.width = width
     data.height = height
-    data.timerDelay = 100 # milliseconds
+    data.timerDelay = 50 # milliseconds
     root = Tk()
     root.resizable(width=False, height=False) # prevents resizing window
     init(data)
@@ -124,4 +181,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(1000, 800)
+run(1000, 700)
