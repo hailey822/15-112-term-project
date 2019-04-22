@@ -9,6 +9,7 @@ from species import *
 from speciesA import *
 from speciesB import *
 from food import *
+from wetland import *
 import numpy 
 import random
 
@@ -18,9 +19,7 @@ def init(data):
     data.B = set()
     data.foods = []
     data.counter = 0
-    data.trap = []
-    data.currentPoints = []
-    
+    data.wetland = WetLand()
     
     for i in range(30):
             xPos = random.randint(0, data.width)
@@ -44,28 +43,25 @@ def init(data):
 
 def keyPressed(event, data):
     if ( event.keysym == "Return"):
-        data.trap.append(data.currentPoints)
-        data.currentPoints = []
+        data.wetland.update()
 
 def redrawAll(canvas, data):
-    if len(data.trap)!=0:
-        for trap in data.trap :     
-            canvas.create_polygon(trap, fill="yellow", outline="black")
-    if len(data.currentPoints)!=0:
-        canvas.create_polygon(data.currentPoints, fill="yellow", outline="black")
+    data.wetland.draw(canvas)
     for food  in data.foods: food.draw(canvas)
     for animal in data.animals: 
         animal.draw(canvas)
         
 
 def mousePressed(event, data): 
-    data.currentPoints.append((event.x,event.y))
+    if ( not data.wetland.contains(event.x, event.y)) : 
+        data.wetland.add(event.x, event.y)
+
 
 def timerFired(data): 
     groupBehavior(data, data.A)
     groupBehavior(data, data.B)
+    data.wetland.age()
     data.counter += 1
-    
     if ( data.counter %3 == 0):    
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
@@ -79,6 +75,7 @@ def timerFired(data):
         
         # Animals move
         data.animals[aIndex].move(data.width, data.height)
+        
         
         # Animals age
         data.animals[aIndex].age += 1
@@ -101,21 +98,21 @@ def timerFired(data):
         
         # Energy is reduced
         # remove animals without energy -> spawn food on dead places
+        # Entered Death Trap
+        enteredTrap = data.wetland.deathTrap(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1])
         data.animals[aIndex].energy -= 1
-        if (data.animals[aIndex].energy >= 0 and data.animals[aIndex].age < 200 ) : 
+        if (data.animals[aIndex].energy >= 0 and data.animals[aIndex].age < 200 and not enteredTrap ) : 
             newAnimals.append(data.animals[aIndex])
         else  :
             death(data, aIndex)
             data.foods.append( Food(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1]))
             
-        
+        # Eat pray
         for i in range(aIndex+1, len(data.animals) ):
             if ( data.animals[aIndex].eatPrey(data.animals[i]) ) : 
                 death(data, i)
                 data.animals.pop(i)
                 break
-  
-            
         aIndex += 1
     
     data.animals = newAnimals
