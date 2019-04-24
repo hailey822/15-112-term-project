@@ -25,20 +25,18 @@ class Species(object):
         self.pos = numpy.array([xPos, yPos])
         self.vel = numpy.array([random.randint(-20, 20), random.randint(-20, 20)])
         self.acc = numpy.array([0, 0])
-        # self.dX = random.choice([-1, 1])
-        # self.dY = random.choice([-1, 1])
 
         # size and speed is inversely related 
-        # bigger size has higher chance of eating food, but moves slow
-        # smaller size has lower chance of eating food, but moves faster
         self.size = random.randint(5, 10)
         self.maxForce = 0.5 + random.random()/2
         self.maxSpeed = random.uniform(100/self.size, 200/self.size)
         
-        self.colorIndex = -1
+        self.colorIndex = set()
         
         self.energy = 125
         self.age = 0
+        self.grownUp = 100
+        self.maxAge = 200
         
         self.prey = set()
         
@@ -90,7 +88,6 @@ class Species(object):
         f = force* self.size
         self.acc = numpy.add(self.acc, f)
         
-    
     def separate(self, group):
         steer = numpy.array([0, 0])
         count = 0
@@ -166,19 +163,14 @@ class Species(object):
         speciesType = other.className()
         if ( speciesType in self.prey) : 
             if (self.distance(self.pos[0], self.pos[1],  other.pos[0], other.pos[1])< (self.size+other.size) ):
-                self.energy += other.energy
+                self.energy += int(other.energy/5)
                 if ( self.energy >= 255) : self.energy = 255
-                return True
-            else : 
-                return False
-        else : 
-            return False
+                other.maxAge *= 0.5
             
             
     def draw(self, canvas):
         canvas.create_oval(self.pos[0]-self.size, self.pos[1]-self.size, self.pos[0]+self.size, self.pos[1]+self.size,fill=self.generateColor())
-        canvas.create_text(self.pos[0], self.pos[1], text = str(self.DNA.gene))
-        
+        #canvas.create_text(self.pos[0], self.pos[1], text= str(self.className()))
     
     def reproduce(self):
         if ( random.random() < 0.01) : 
@@ -213,7 +205,7 @@ class Species(object):
     def generateColor(self):
         color = "#"
         for i in range(3):
-            if i==self.colorIndex : 
+            if i in self.colorIndex : 
                 color += str( Species.decimalToHex(self.DNA.gene) )
             else : 
                 color += "FF"

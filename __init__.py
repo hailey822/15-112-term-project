@@ -5,11 +5,18 @@
 # https://www.cs.cmu.edu/~112/notes/notes-graphics.html
 
 from tkinter import *
+
 from species import *
 from speciesA import *
 from speciesB import *
+from speciesC import * 
+from speciesD import *
+
+from graph import *
+ 
 from food import *
 from wetland import *
+
 import numpy 
 import random
 
@@ -17,55 +24,60 @@ def init(data):
     data.animals = []
     data.A = set()
     data.B = set()
+    data.C = set()
+    data.D = set()
     data.foods = []
-    data.counter = 0
+    populate(data)
+    
     data.wetland = WetLand()
-    
-    for i in range(30):
-            xPos = random.randint(0, data.width)
-            yPos = random.randint(0, data.height)
-            data.foods.append( Food(xPos, yPos) )
 
-    for i in range(20):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = A(xPos, yPos, 0)
-        data.A.add(organism)
-        data.animals.append( organism)
+    data.counter = 0
+    data.paused = True
     
-    for i in range(100):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = B(xPos, yPos, 0)
-        data.B.add(organism)
-        data.animals.append( organism)
-
+    data.graphIndex = 0
+    data.popList = [ [], [], [], [], [] ]
+    data.mutList = [ [], [], [], [], [] ]
 
 def keyPressed(event, data):
     if ( event.keysym == "Return"):
         data.wetland.update()
+    if ( event.keysym == "p"):
+        data.paused = not data.paused
 
 def redrawAll(canvas, data):
     data.wetland.draw(canvas)
     for food  in data.foods: food.draw(canvas)
     for animal in data.animals: 
         animal.draw(canvas)
+    graphWrapper(canvas, data)
         
+def mousePressed(event, data):
 
-def mousePressed(event, data): 
+    newGraphIndex = clickGraphSelector(event.x, event.y, data.width*0.805, data.width*0.965, data.height*0.97)
+    if ( newGraphIndex != -1 ) : 
+        data.graphIndex = newGraphIndex 
+    if ( event.x > data.width*0.75 and event.y > data.height*0.74) : return  
     if ( not data.wetland.contains(event.x, event.y)) : 
         data.wetland.add(event.x, event.y)
-
+    
 
 def timerFired(data): 
+    if ( data.paused ): return 
+    
+    data.counter += 1
+    
+    # Graph Information
+    graphCalculation(data)
+    
+    # Species Group Behavior 
     groupBehavior(data, data.A)
     groupBehavior(data, data.B)
+    groupBehavior(data, data.C)
+    groupBehavior(data, data.D)
+    
+    # Wetland 
     data.wetland.age()
-    data.counter += 1
-    if ( data.counter %3 == 0):    
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        data.foods.append( Food(xPos, yPos) )
+    data.wetland.generateFood(data)
         
     # Animal : Move, EatFood, energy reduction
     aIndex = 0
@@ -76,18 +88,20 @@ def timerFired(data):
         # Animals move
         data.animals[aIndex].move(data.width, data.height)
         
-        
         # Animals age
         data.animals[aIndex].age += 1
-        # Reproduce after certain age
-        if ( data.animals[aIndex].age > 100 ): 
+        
+        # Animals reproduce after certain age
+        if ( data.animals[aIndex].age > data.animals[aIndex].grownUp ): 
             child = data.animals[aIndex].reproduce()
             if ( child != None) : 
                 data.animals.append(child)
                 if ( child.className() == "A"): data.A.add(child)
                 if ( child.className() == "B"): data.B.add(child)
+                if ( child.className() == "C"): data.C.add(child)
+                if ( child.className() == "D"): data.D.add(child)
         
-        # Loop through existing foods and eat 
+        # Animals eat food 
         fIndex = 0
         newFoods = []
         while ( fIndex < len(data.foods) ):
@@ -96,37 +110,71 @@ def timerFired(data):
             fIndex += 1
         data.foods = newFoods
         
-        # Energy is reduced
-        # remove animals without energy -> spawn food on dead places
-        # Entered Death Trap
-        enteredTrap = data.wetland.deathTrap(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1])
+        # Animals run out of energy as it moves 
         data.animals[aIndex].energy -= 1
-        if (data.animals[aIndex].energy >= 0 and data.animals[aIndex].age < 200 and not enteredTrap ) : 
+        # Die when entered Death Trap
+        enteredTrap = data.wetland.deathTrap(data.animals[aIndex].pos[0], 
+                                            data.animals[aIndex].pos[1])
+        # Die without energy -> spawn food on dead places
+        # Die over certain age
+        if (data.animals[aIndex].energy >= 0 and 
+            data.animals[aIndex].age < data.animals[aIndex].maxAge 
+            and not enteredTrap ) : 
             newAnimals.append(data.animals[aIndex])
         else  :
             death(data, aIndex)
             data.foods.append( Food(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1]))
             
-        # Eat pray
+        # Animals eat pray -> reduce lifestime of the eaten organism 
         for i in range(aIndex+1, len(data.animals) ):
-            if ( data.animals[aIndex].eatPrey(data.animals[i]) ) : 
-                death(data, i)
-                data.animals.pop(i)
-                break
+            data.animals[aIndex].eatPrey(data.animals[i])
         aIndex += 1
-    
     data.animals = newAnimals
 
 def death(data, index):
     target = data.animals[index]
-    if ( target.className() == "A"): 
-        data.A.remove(target)
-    if ( target.className() == "B"): 
-        data.B.remove(target)
+    if ( target.className() == "A"):  data.A.remove(target)
+    if ( target.className() == "B"):  data.B.remove(target)
+    if ( target.className() == "C"):  data.C.remove(target)
+    if ( target.className() == "D"):  data.D.remove(target)
         
+def populate(data):
+    for i in range(30):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        data.foods.append( Food(xPos, yPos) )
+
+    for i in range(20):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        organism = A(xPos, yPos, 0)
+        data.A.add(organism)
+        data.animals.append( organism)
+    
+    for i in range(20):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        organism = B(xPos, yPos, 0)
+        data.B.add(organism)
+        data.animals.append( organism)
+    
+    for i in range(30):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        organism = C(xPos, yPos, 0)
+        data.C.add(organism)
+        data.animals.append( organism)
+
+    for i in range(30):
+        xPos = random.randint(0, data.width)
+        yPos = random.randint(0, data.height)
+        organism = D(xPos, yPos, 0)
+        data.D.add(organism)
+        data.animals.append( organism)
+        
+
 def groupBehavior(data, group):
     for animal in group : 
-        #animal.seek(data.target)
         animal.cohere(group)
         animal.align(group)
         animal.separate(group)
@@ -160,7 +208,7 @@ def run(width=300, height=300):
     data = Struct()
     data.width = width
     data.height = height
-    data.timerDelay = 50 # milliseconds
+    data.timerDelay = 1 # milliseconds
     root = Tk()
     root.resizable(width=False, height=False) # prevents resizing window
     init(data)
@@ -178,4 +226,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(1000, 700)
+run(1400, 800)

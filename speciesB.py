@@ -4,12 +4,14 @@ class B(Species):
     
     def __init__(self, xPos, yPos, colorValue = None):
         super().__init__(xPos, yPos, colorValue)
-        self.colorIndex = 1
-        #self.size = random.randint(3, 7)
-        #self.maxSpeed = random.uniform(100/self.size, 200/self.size)
+        self.colorIndex = {1}
+        self.prey.add("C")
+        self.prey.add("D")
+        self.grownUp = 80
+        self.maxAge = 150 * random.uniform(0.8, 1.2)
 
     def reproduce(self):
-        if ( random.random() < 0.04) : 
+        if ( random.random() < 0.05) : 
             child = B(self.pos[0], self.pos[1])
             child.DNA = DNA()
             child.DNA.mutate(random.random())
@@ -19,7 +21,3 @@ class B(Species):
             return child
         else : 
             return None
-    
-    def draw(self, canvas):
-        canvas.create_oval(self.pos[0]-self.size, self.pos[1]-self.size, self.pos[0]+self.size, self.pos[1]+self.size,fill=self.generateColor(), outline="red")
-        canvas.create_text(self.pos[0], self.pos[1], text = str(self.DNA.gene))

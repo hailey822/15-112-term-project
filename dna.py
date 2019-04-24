@@ -4,7 +4,7 @@ class DNA(object):
     
     def __init__(self, color = None):
         if ( color==None):
-            self.gene = random.randint(0, 156) + 100
+            self.gene = 0
         else :
             self.gene = color
         
@@ -13,7 +13,7 @@ class DNA(object):
                     
     def mutate(self, mutationRate):
         if ( random.random() < 0.5) : 
-            self.gene = int( 155 * mutationRate) + 100
+            self.gene = int( random.randint(0, 200) )
         else : 
             self.gene = 0
                             

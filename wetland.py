@@ -1,42 +1,61 @@
 import random 
+from food import * 
+from shapely.geometry import Polygon, Point
 
 # CITATION: checking if the point is inside polygon 
 # http://www.ariel.com.au/a/python-point-int-poly.html
+
+# CITATION: calculating area of irregular polygon
+# https://arachnoid.com/area_irregular_polygon/
+
+# CITATION : generating random point inside polygon 
+# https://gis.stackexchange.com/questions/6412/generate-points-that-lie-inside-polygon
+
 class WetLand(object):
     
     def __init__(self):
-        self.lands = []
+        
         self.currentPoints = []
+       
+        self.lands = []
+        self.center = []
+        self.area = [] 
         self.type = []
         self.ages = []
     
     def update(self):
-        if ( len(self.currentPoints) > 0 ) : 
+        if ( len(self.currentPoints) > 2 ) : 
             self.lands.append(self.currentPoints)
             self.type.append("Gen")
             self.ages.append(100)
+            self.center.append(self.calCenter(self.currentPoints))
+            self.area.append( self.calArea(self.currentPoints))
             self.currentPoints = []
-        
                 
     def add(self, x, y):
         self.currentPoints.append((x,y))
     
     def age(self):
-        print(len(self.ages))
         index = 0 
         newAges = []
         newTypes = [] 
         newLands = []
+        newCenter = []
+        newArea = []
         while ( index < len(self.ages)):
             self.ages[index] -= 1
             if ( self.ages[index] > 0 ): 
                 newAges.append( self.ages[index])
                 newTypes.append( self.type[index])
                 newLands.append( self.lands[index])
+                newCenter.append( self.center[index])
+                newArea.append( self.area[index])
             index += 1
         self.ages = newAges
         self.type = newTypes
         self.lands = newLands
+        self.center = newCenter
+        self.area = newArea
     
     # Takes decimal number and convert to Hex
     @staticmethod
@@ -86,6 +105,7 @@ class WetLand(object):
                 else                               : self.type[index] = "Death"
                 return True
         return False
+            
     
     def deathTrap(self, x, y):
         for index in range(len(self.lands)):  
@@ -107,6 +127,42 @@ class WetLand(object):
         return False
     
     def generateFood(self, data):
-        pass
+        for indexL in range(len(self.lands)):
+            if ( not self.type[indexL] == "Gen") : continue
+            center = self.center[indexL]
+            area = self.area[indexL]
+            landPolygon = Polygon( self.lands[indexL])
+            points = self.generateRandomPoint(landPolygon, area//10000)
+            for point in points: 
+                data.foods.append( Food(point.x, point.y))
+            
+    def generateRandomPoint(self, poly, num):
+        (minx, miny, maxx, maxy) = poly.bounds
+        points = []
+        while len(points) < num:
+            p = Point(random.uniform(minx, maxx), random.uniform(miny, maxy))
+            if poly.contains(p):
+                points.append(p)
+        return points
+            
+            
+    def calCenter(self, land):
+        x = 0 
+        y = 0 
+        for point in land : 
+            x += point[0]
+            y += point[1]
+        return (int(x/len(land)), int(y/len(land)))
+        
+    def calArea(self, land):
+        a = 0
+        array = land + [land[0]]
+        ox,oy = array[0]
+        for x,y in array[1:]:
+            a += (x*oy-y*ox)
+            ox,oy = x,y
+        return abs(a/2)
+    
+
     
         
