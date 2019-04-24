@@ -5,27 +5,19 @@
 # https://www.cs.cmu.edu/~112/notes/notes-graphics.html
 
 from tkinter import *
+
 from PIL import Image
 from PIL import ImageTk
 
-from species import *
-from speciesA import *
-from speciesB import *
-from speciesC import * 
-from speciesD import *
+from main import *
+from start import *
+from guideline import *
 
-from graph import *
- 
-from food import *
-from wetland import *
-
-import numpy 
-import random
-
-
-    
 def init(data):
     imageIO(data)
+    
+    data.mode = "start"
+    
     data.animals = []
     data.A = set()
     data.B = set()
@@ -42,129 +34,61 @@ def init(data):
     data.graphIndex = 0
     data.popList = [ [], [], [], [], [] ]
     data.mutList = [ [], [], [], [], [] ]
+    
+    data.guideIndex = 0
 
 def keyPressed(event, data):
-    if ( event.keysym == "Return"):
-        data.wetland.update()
-    if ( event.keysym == "p"):
-        data.paused = not data.paused
-
+    if ( data.mode == "main")  :  MainKeyPressed(event, data)
+    if ( data.mode == "start") :  StartKeyPressed(event, data)
+    if ( data.mode == "guideline") : GuidelineKeyPressed(event, data)
+    
 def redrawAll(canvas, data):
-    data.wetland.draw(canvas)
-    for food  in data.foods: food.draw(canvas)
-    for animal in data.animals: 
-        animal.draw(canvas)
-    graphWrapper(canvas, data)
-    pause(canvas, data)
+    if ( data.mode == "main") : MainRedrawAll(canvas, data)
+    if ( data.mode == "start") : StartRedrawAll(canvas, data)
+    if ( data.mode == "guideline") : GuidelineRedrawAll(canvas, data)
     
-    #canvas.create_image(data.width//2, data.height//2, image = data.guide[3], anchor = "center")
-    
-        
 def mousePressed(event, data):
-
-    newGraphIndex = clickGraphSelector(event.x, event.y, data.width*0.805, data.width*0.965, data.height*0.97)
-    if ( newGraphIndex != -1 ) : 
-        data.graphIndex = newGraphIndex 
-    if ( event.x > data.width*0.75 and event.y > data.height*0.74) : return  
-    if ( not data.wetland.contains(event.x, event.y)) : 
-        data.wetland.add(event.x, event.y)
+    if ( data.mode == "main")  : MainMousePressed(event, data)
+    if ( data.mode == "start") : StartMousePressed(event, data)
+    if ( data.mode == "guideline") : GuidelineMousePressed(event, data)
     
-
 def timerFired(data): 
-    if ( data.paused ): return 
+    if ( data.mode == "main")  : MainTimerFired(data)
+    if ( data.mode == "start") : StartTimerFired(data)
+    if ( data.mode == "guideline") : GuidelineTimerFired(data)
     
-    data.counter += 1
     
-    # Graph Information
-    graphCalculation(data)
-    
-    # Species Group Behavior 
-    groupBehavior(data, data.A)
-    groupBehavior(data, data.B)
-    groupBehavior(data, data.C)
-    groupBehavior(data, data.D)
-    
-    # Wetland 
-    data.wetland.age()
-    data.wetland.generateFood(data)
-        
-    # Animal : Move, EatFood, energy reduction
-    aIndex = 0
-    
-    newAnimals = []
-    while ( aIndex < len(data.animals) ):
-        
-        # Animals move
-        data.animals[aIndex].move(data.width, data.height)
-        
-        # Animals age
-        data.animals[aIndex].age += 1
-        
-        # Animals reproduce after certain age
-        if ( data.animals[aIndex].age > data.animals[aIndex].grownUp ): 
-            child = data.animals[aIndex].reproduce()
-            if ( child != None) : 
-                data.animals.append(child)
-                if ( child.className() == "A"): data.A.add(child)
-                if ( child.className() == "B"): data.B.add(child)
-                if ( child.className() == "C"): data.C.add(child)
-                if ( child.className() == "D"): data.D.add(child)
-        
-        # Animals eat food 
-        fIndex = 0
-        newFoods = []
-        while ( fIndex < len(data.foods) ):
-            if ( not data.animals[aIndex].eatFood(data.foods[fIndex]) ) : 
-                newFoods.append( data.foods[fIndex] )
-            fIndex += 1
-        data.foods = newFoods
-        
-        # Animals run out of energy as it moves 
-        data.animals[aIndex].energy -= 1
-        # Die when entered Death Trap
-        enteredTrap = data.wetland.deathTrap(data.animals[aIndex].pos[0], 
-                                            data.animals[aIndex].pos[1])
-        # Die without energy -> spawn food on dead places
-        # Die over certain age
-        if (data.animals[aIndex].energy >= 0 and 
-            data.animals[aIndex].age < data.animals[aIndex].maxAge 
-            and not enteredTrap ) : 
-            newAnimals.append(data.animals[aIndex])
-        else  :
-            death(data, aIndex)
-            data.foods.append( Food(data.animals[aIndex].pos[0], data.animals[aIndex].pos[1]))
-            
-        # Animals eat pray -> reduce lifestime of the eaten organism 
-        for i in range(aIndex+1, len(data.animals) ):
-            data.animals[aIndex].eatPrey(data.animals[i])
-        aIndex += 1
-    data.animals = newAnimals
-    
-
 def imageIO(data):
+    
     fileName= "ae_start.jpg"
     start_image = Image.open(fileName)
+    ratio = start_image.size[1]/start_image.size[0] 
+    start_img = start_image.resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
+    data.start = ImageTk.PhotoImage(start_img)
+    
     guide_images = []
     for i in range(4):
         fileName = "ae_guidline%s.jpg"%str(i+1)
         guide_images.append( Image.open(fileName) )
-    
-    ratio = start_image.size[1]/start_image.size[0] 
-    start_img = start_image.resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
-    
-    data.start = ImageTk.PhotoImage(start_img)
+
     data.guide = []
     for i in range(4):
         ratio = guide_images[i].size[1]/guide_images[i].size[0] 
         guide = guide_images[i].resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
         data.guide.append( ImageTk.PhotoImage(guide) )
-
-def death(data, index):
-    target = data.animals[index]
-    if ( target.className() == "A"):  data.A.remove(target)
-    if ( target.className() == "B"):  data.B.remove(target)
-    if ( target.className() == "C"):  data.C.remove(target)
-    if ( target.className() == "D"):  data.D.remove(target)
+        
+    fileName= "ae_startbutton.jpg"
+    button_image = Image.open(fileName)
+    ratio = button_image.size[1]/button_image.size[0] 
+    button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
+    data.startbutton = ImageTk.PhotoImage(button_img)
+    
+    fileName= "ae_guidebutton.jpg"
+    button_image = Image.open(fileName)
+    ratio = button_image.size[1]/button_image.size[0] 
+    button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
+    data.guidebutton = ImageTk.PhotoImage(button_img)
+    
         
 def populate(data):
     for i in range(30):
@@ -200,25 +124,6 @@ def populate(data):
         data.D.add(organism)
         data.animals.append( organism)
         
-
-def groupBehavior(data, group):
-    for animal in group : 
-        animal.cohere(group)
-        animal.align(group)
-        animal.separate(group)
-        animal.move(data.width, data.height)
-        animal.acc = numpy.array([0, 0])
-
-def pause(canvas, data):
-    
-    canvas.create_rectangle(0, 0, 150, 50, fill="white", width=0)
-    canvas.create_oval( 10, 10, 40, 40, fill="white")
-    if ( data.paused) : 
-        canvas.create_polygon( 20, 15, 20, 35, 35, 25, fill="black")
-    else : 
-        canvas.create_rectangle( 17, 18, 22, 32, fill="black")
-        canvas.create_rectangle( 27, 18, 32, 32, fill="black")
-    canvas.create_text( 100, 25, text="press \"p\" to \npause/resume", anchor = "center")
 
 def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
@@ -265,4 +170,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(1400, 800)
+run(1200, 800)
