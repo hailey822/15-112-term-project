@@ -5,6 +5,8 @@
 # https://www.cs.cmu.edu/~112/notes/notes-graphics.html
 
 from tkinter import *
+from PIL import Image
+from PIL import ImageTk
 
 from species import *
 from speciesA import *
@@ -20,7 +22,10 @@ from wetland import *
 import numpy 
 import random
 
+
+    
 def init(data):
+    imageIO(data)
     data.animals = []
     data.A = set()
     data.B = set()
@@ -32,7 +37,7 @@ def init(data):
     data.wetland = WetLand()
 
     data.counter = 0
-    data.paused = True
+    data.paused = False
     
     data.graphIndex = 0
     data.popList = [ [], [], [], [], [] ]
@@ -50,6 +55,10 @@ def redrawAll(canvas, data):
     for animal in data.animals: 
         animal.draw(canvas)
     graphWrapper(canvas, data)
+    pause(canvas, data)
+    
+    #canvas.create_image(data.width//2, data.height//2, image = data.guide[3], anchor = "center")
+    
         
 def mousePressed(event, data):
 
@@ -130,6 +139,25 @@ def timerFired(data):
             data.animals[aIndex].eatPrey(data.animals[i])
         aIndex += 1
     data.animals = newAnimals
+    
+
+def imageIO(data):
+    fileName= "ae_start.jpg"
+    start_image = Image.open(fileName)
+    guide_images = []
+    for i in range(4):
+        fileName = "ae_guidline%s.jpg"%str(i+1)
+        guide_images.append( Image.open(fileName) )
+    
+    ratio = start_image.size[1]/start_image.size[0] 
+    start_img = start_image.resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
+    
+    data.start = ImageTk.PhotoImage(start_img)
+    data.guide = []
+    for i in range(4):
+        ratio = guide_images[i].size[1]/guide_images[i].size[0] 
+        guide = guide_images[i].resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
+        data.guide.append( ImageTk.PhotoImage(guide) )
 
 def death(data, index):
     target = data.animals[index]
@@ -180,6 +208,17 @@ def groupBehavior(data, group):
         animal.separate(group)
         animal.move(data.width, data.height)
         animal.acc = numpy.array([0, 0])
+
+def pause(canvas, data):
+    
+    canvas.create_rectangle(0, 0, 150, 50, fill="white", width=0)
+    canvas.create_oval( 10, 10, 40, 40, fill="white")
+    if ( data.paused) : 
+        canvas.create_polygon( 20, 15, 20, 35, 35, 25, fill="black")
+    else : 
+        canvas.create_rectangle( 17, 18, 22, 32, fill="black")
+        canvas.create_rectangle( 27, 18, 32, 32, fill="black")
+    canvas.create_text( 100, 25, text="press \"p\" to \npause/resume", anchor = "center")
 
 def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
