@@ -8,7 +8,7 @@ def graphWrapper(canvas, data):
         
 def drawGraph(canvas, width, height, population, mutation, label):
     
-    canvas.create_rectangle( width*0.75, height*0.74, width, height, fill="white", width=0)
+    #canvas.create_rectangle( width*0.75, height*0.74, width, height, fill="white", width=0)
     canvas.create_rectangle( width*0.79, height*0.78, width*0.96, height*0.94, fill="white")
     canvas.create_text( width*0.875, height*0.77, anchor ="s", text =label)
 
@@ -19,8 +19,11 @@ def drawGraph(canvas, width, height, population, mutation, label):
     
     canvas.create_text( width*0.785, minH,        text = "200", anchor = "e", fill="red")
     canvas.create_text( width*0.785, height*0.82, text = "150", anchor = "e", fill="red")
+    canvas.create_line( minW, height*0.82 , maxW, height*0.82, fill="gainsboro")
     canvas.create_text( width*0.785, height*0.86, text = "100", anchor = "e", fill="red")
+    canvas.create_line( minW, height*0.86 , maxW, height*0.86, fill="gainsboro")
     canvas.create_text( width*0.785, height*0.90, text = "50",  anchor = "e", fill="red")
+    canvas.create_line( minW, height*0.90 , maxW, height*0.90, fill="gainsboro")
     canvas.create_text( width*0.785, height*0.965,text = "pop\nsize", anchor = "e", fill="red")
 
     canvas.create_text( width*0.965, minH,        text = "1", anchor = "w", fill="blue")

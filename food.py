@@ -6,8 +6,15 @@ class Food(object):
       self.xPos = xPos
       self.yPos = yPos
       self.energy = random.randint(5, 10)
+      self.zone = None
+   
+   def __hash__(self):
+      return hash((self.xPos, self.yPos, self.energy))
+      
+   def __repr__(self):
+      return "food(%d, %d)"%(self.xPos, self.yPos)
    
    def draw(self, canvas):   
-      canvas.create_rectangle(self.xPos-self.energy//2, self.yPos-self.energy//2, 
-                              self.xPos+self.energy//2, self.yPos+self.energy//2,
-                              fill = "green", width = 0)
+      canvas.create_oval(self.xPos-self.energy//3, self.yPos-self.energy//3, 
+                              self.xPos+self.energy//3, self.yPos+self.energy//3,
+                              fill="gainsboro", width=1)                      

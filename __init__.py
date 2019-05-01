@@ -14,27 +14,45 @@ from start import *
 from guideline import *
 
 def init(data):
+    # Image IO
     imageIO(data)
     
-    data.mode = "start"
+    # Initial mode
+    data.mode = "main"
+    data.paused = False
+    data.background = "white"
     
+    # Grid System
+    data.size = 200
+    data.gs = GridSystem(data.size, data.width, data.height)
+    
+    # Ecosystem 
+    #---Animals---# 
     data.animals = []
     data.A = set()
     data.B = set()
     data.C = set()
     data.D = set()
+    #---Animals---# 
     data.foods = []
+    #-- Virus---# E
+    data.virus = set()
     populate(data)
-    
+    #---Wetland---# 
     data.wetland = WetLand()
 
-    data.counter = 0
-    data.paused = False
+    #---Emergency---# 
+    data.spawned = False
+    data.emergency = False
+    data.virusTarget = None
+    data.virusTargetIndex = None
+    data.newLife = []
     
+    #---Graph---# 
     data.graphIndex = 0
     data.popList = [ [], [], [], [], [] ]
     data.mutList = [ [], [], [], [], [] ]
-    
+    #---Guideline---# 
     data.guideIndex = 0
 
 def keyPressed(event, data):
@@ -82,54 +100,18 @@ def imageIO(data):
     ratio = button_image.size[1]/button_image.size[0] 
     button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
     data.startbutton = ImageTk.PhotoImage(button_img)
-    
     fileName= "ae_guidebutton.jpg"
     button_image = Image.open(fileName)
     ratio = button_image.size[1]/button_image.size[0] 
     button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
     data.guidebutton = ImageTk.PhotoImage(button_img)
     
-        
-def populate(data):
-    for i in range(30):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        data.foods.append( Food(xPos, yPos) )
-
-    for i in range(20):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = A(xPos, yPos, 0)
-        data.A.add(organism)
-        data.animals.append( organism)
     
-    for i in range(20):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = B(xPos, yPos, 0)
-        data.B.add(organism)
-        data.animals.append( organism)
-    
-    for i in range(30):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = C(xPos, yPos, 0)
-        data.C.add(organism)
-        data.animals.append( organism)
-
-    for i in range(30):
-        xPos = random.randint(0, data.width)
-        yPos = random.randint(0, data.height)
-        organism = D(xPos, yPos, 0)
-        data.D.add(organism)
-        data.animals.append( organism)
-        
 
 def run(width=300, height=300):
     def redrawAllWrapper(canvas, data):
         canvas.delete(ALL)
-        canvas.create_rectangle(0, 0, data.width, data.height,
-                                fill='white', width=0)
+        canvas.create_rectangle(0, 0, data.width, data.height, fill="white", width=0)
         redrawAll(canvas, data)
         canvas.update()    
 
@@ -152,7 +134,7 @@ def run(width=300, height=300):
     data = Struct()
     data.width = width
     data.height = height
-    data.timerDelay = 1 # milliseconds
+    data.timerDelay = 1# milliseconds
     root = Tk()
     root.resizable(width=False, height=False) # prevents resizing window
     init(data)
@@ -170,4 +152,4 @@ def run(width=300, height=300):
     root.mainloop()  # blocks until window is closed
     print("bye!")
 
-run(1200, 800)
+run(1400, 800)

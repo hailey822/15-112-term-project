@@ -32,7 +32,14 @@ class Species(object):
         self.maxSpeed = random.uniform(100/self.size, 200/self.size)
         
         self.colorIndex = set()
+        self.points = []   
+        for i in range(10):
+            r = random.randint(self.size//2, self.size)
+            x = self.pos[0] + r * math.cos(math.pi*2*i/10)
+            y = self.pos[1] + r * math.sin(math.pi*2*i/10)
+            self.points.append( (x, y) )  
         
+ 
         self.energy = 125
         self.age = 0
         self.grownUp = 100
@@ -40,8 +47,14 @@ class Species(object):
         
         self.prey = set()
         
+        self.zone = None
+        
     def __hash__(self):
         return hash((self.DNA.gene, self.size, self.maxForce, self.maxSpeed))
+        
+    def __repr__(self):
+        return "%s(%d, %d)"%(self.className(), self.pos[0], self.pos[1])
+   
         
     def move(self, width, height):
         self.vel = numpy.add(self.vel, self.acc)
@@ -138,7 +151,6 @@ class Species(object):
     def seek(self, target):
         # target comes as numpy array
         if ( not isinstance(target, numpy.ndarray)): 
-            print("Target is not vectors")
             return 
         desired = numpy.subtract( target, self.pos)
         desired = self.limit2DVector( desired,1)  # normalize
@@ -152,6 +164,7 @@ class Species(object):
         self.applyForce(steer)
     
     def eatFood(self, food):
+        if ( not isinstance(food, Food) ) : return 
         if (self.distance(self.pos[0], self.pos[1], food.xPos, food.yPos)< (self.size+food.energy) ) :
             self.energy += food.energy*2
             if ( self.energy >= 255) : self.energy = 255
@@ -160,17 +173,27 @@ class Species(object):
             return False
         
     def eatPrey(self, other):
+        if ( not isinstance(other, Species) ) : return 
         speciesType = other.className()
         if ( speciesType in self.prey) : 
             if (self.distance(self.pos[0], self.pos[1],  other.pos[0], other.pos[1])< (self.size+other.size) ):
                 self.energy += int(other.energy/5)
                 if ( self.energy >= 255) : self.energy = 255
                 other.maxAge *= 0.5
+        
             
             
-    def draw(self, canvas):
-        canvas.create_oval(self.pos[0]-self.size, self.pos[1]-self.size, self.pos[0]+self.size, self.pos[1]+self.size,fill=self.generateColor())
+    def draw(self, canvas, paused):
+        #canvas.create_oval(self.pos[0]-self.size, self.pos[1]-self.size, self.pos[0]+self.size, self.pos[1]+self.size,fill=self.generateColor())
         #canvas.create_text(self.pos[0], self.pos[1], text= str(self.className()))
+        if (not paused) :
+            self.points = []
+            for i in range(10):
+                r = random.randint(self.size//2, self.size)
+                x = self.pos[0] + r * math.cos(math.pi*2*i/10)
+                y = self.pos[1] + r * math.sin(math.pi*2*i/10)
+                self.points.append( (x, y) )
+        canvas.create_polygon(self.points, smooth="true", fill=self.generateColor())
     
     def reproduce(self):
         if ( random.random() < 0.01) : 

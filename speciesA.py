@@ -1,7 +1,7 @@
 from species import *
 
 class A(Species):
-    
+
     def __init__(self, xPos, yPos, colorValue = None):
         super().__init__(xPos, yPos, colorValue)
         self.prey.add("B")
@@ -22,5 +22,6 @@ class A(Species):
         else : 
             return None
 
-            
+
+        
         
