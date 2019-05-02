@@ -4,26 +4,31 @@
 # CITATION: I got the initial tkinter code from 
 # https://www.cs.cmu.edu/~112/notes/notes-graphics.html
 
+### import 
 from tkinter import *
+from tkinter.font import Font
 
 from PIL import Image
 from PIL import ImageTk
 
+sys.path.insert(0, './sources')
+
 from main import *
 from start import *
 from guideline import *
+###
 
 def init(data):
     # Image IO
     imageIO(data)
     
     # Initial mode
-    data.mode = "main"
+    data.mode = "start"
     data.paused = False
     data.background = "white"
     
     # Grid System
-    data.size = 200
+    data.size = 100
     data.gs = GridSystem(data.size, data.width, data.height)
     
     # Ecosystem 
@@ -55,6 +60,7 @@ def init(data):
     #---Guideline---# 
     data.guideIndex = 0
 
+
 def keyPressed(event, data):
     if ( data.mode == "main")  :  MainKeyPressed(event, data)
     if ( data.mode == "start") :  StartKeyPressed(event, data)
@@ -75,36 +81,25 @@ def timerFired(data):
     if ( data.mode == "start") : StartTimerFired(data)
     if ( data.mode == "guideline") : GuidelineTimerFired(data)
     
-    
+
+# Importing Images 
 def imageIO(data):
-    
-    fileName= "ae_start.jpg"
+    fileName= "images/ae_start.png"
     start_image = Image.open(fileName)
     ratio = start_image.size[1]/start_image.size[0] 
-    start_img = start_image.resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
+    start_img = start_image.resize( (data.width, int(data.width*ratio)), Image.ANTIALIAS)
     data.start = ImageTk.PhotoImage(start_img)
     
     guide_images = []
-    for i in range(4):
-        fileName = "ae_guidline%s.jpg"%str(i+1)
+    for i in range(5):
+        fileName = "images/ae_guidline%s.jpg"%str(i+1)
         guide_images.append( Image.open(fileName) )
 
     data.guide = []
-    for i in range(4):
+    for i in range(5):
         ratio = guide_images[i].size[1]/guide_images[i].size[0] 
-        guide = guide_images[i].resize(( int(data.width*0.9), int(data.width*0.9*ratio)), Image.ANTIALIAS)
+        guide = guide_images[i].resize(( int(data.width*0.8), int(data.width*0.8*ratio)), Image.ANTIALIAS)
         data.guide.append( ImageTk.PhotoImage(guide) )
-        
-    fileName= "ae_startbutton.jpg"
-    button_image = Image.open(fileName)
-    ratio = button_image.size[1]/button_image.size[0] 
-    button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
-    data.startbutton = ImageTk.PhotoImage(button_img)
-    fileName= "ae_guidebutton.jpg"
-    button_image = Image.open(fileName)
-    ratio = button_image.size[1]/button_image.size[0] 
-    button_img = button_image.resize(( int(data.width*0.1), int(data.width*0.1*ratio)), Image.ANTIALIAS)
-    data.guidebutton = ImageTk.PhotoImage(button_img)
     
     
 
@@ -132,7 +127,7 @@ def run(width=300, height=300):
     # Set up data and call init
     class Struct(object): pass
     data = Struct()
-    data.width = width
+    data.width = width 
     data.height = height
     data.timerDelay = 1# milliseconds
     root = Tk()
@@ -145,6 +140,7 @@ def run(width=300, height=300):
     # set up events
     root.bind("<Button-1>", lambda event:
                             mousePressedWrapper(event, canvas, data))
+    root.bind("<Escape>", lambda event:root.destroy())
     root.bind("<Key>", lambda event:
                             keyPressedWrapper(event, canvas, data))
     timerFiredWrapper(canvas, data)
