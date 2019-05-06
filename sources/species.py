@@ -5,7 +5,7 @@ import copy
 from food import *
 from dna import *
 
-# CITATION: The structure of Species was modelled after autonomous agents 
+# CITATION: Species Class was modelled after autonomous agents 
 # https://natureofcode.com/book/chapter-6-autonomous-agents/
 
 class Species(object):

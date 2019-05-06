@@ -132,6 +132,7 @@ def run(width=300, height=300):
     data.timerDelay = 1# milliseconds
     root = Tk()
     root.resizable(width=False, height=False) # prevents resizing window
+    #root.attributes("-fullscreen", True)
     init(data)
     # create the root and the canvas
     canvas = Canvas(root, width=data.width, height=data.height)

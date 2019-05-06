@@ -7,8 +7,6 @@ from tkinter import *
 from PIL import Image
 from PIL import ImageTk
 
-
-
 def GuidelineKeyPressed(event, data):
     pass
 

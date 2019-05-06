@@ -167,14 +167,14 @@ def MainTimerFired(data):
 
 # Initialize the first population 
 def populate(data):
-    for i in range(30):
+    for i in range(40):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         food =  Food(xPos, yPos)
         food.zone = data.gs.add( food, xPos, yPos)
         data.foods.append(food )
 
-    for i in range(30):
+    for i in range(40):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         organism = A(xPos, yPos, 0)
@@ -182,7 +182,7 @@ def populate(data):
         data.A.add(organism)
         data.animals.append( organism)
 
-    for i in range(30):
+    for i in range(40):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         organism = B(xPos, yPos, 0)
@@ -190,7 +190,7 @@ def populate(data):
         data.B.add(organism)
         data.animals.append( organism)
     
-    for i in range(40):
+    for i in range(30):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         organism = C(xPos, yPos, 0)
@@ -198,7 +198,7 @@ def populate(data):
         data.C.add(organism)
         data.animals.append( organism)
 
-    for i in range(40):
+    for i in range(30):
         xPos = random.randint(0, data.width)
         yPos = random.randint(0, data.height)
         organism = D(xPos, yPos, 0)
