@@ -3,6 +3,7 @@
 Virus appears at certain point when the whole population exceeds certain level. This emergency situation let the ecosystem to run and balance itself endlessly, adding complexity to the ecosystem. 
 
 [![Watch the video](https://i.imgur.com/jT4xh2D.jpg)](https://vimeo.com/333818929)
+click to view the video
 
 ### How to run the projec
 Run "__init__.py" file 
